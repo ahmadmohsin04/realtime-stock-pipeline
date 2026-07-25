@@ -11,26 +11,30 @@ import threading
 from src.storage.models import get_engine, init_db
 from src.storage.queries import get_tracked_tickers, get_latest_prices, get_latest_metrics, get_latest_metric_snapshot
 from src.ingestion.scheduler import poll_all_tickers
+from src.processing.pipeline import process_all_tickers
 from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 
 st.set_page_config(page_title="Live Stock Pipeline Dashboard", layout="wide")
+TICKERS = os.getenv("TICKERS", "AAPL").split(",")
 
 DB_PATH = os.getenv("DB_PATH", "data/prices.db")
 engine = get_engine(DB_PATH)
 init_db(engine)
 
-# Start the ingestion scheduler once, in the background, inside this same process
+def poll_and_process() : 
+    poll_all_tickers()
+    process_all_tickers(engine, TICKERS)
+
 if "scheduler_started" not in st.session_state:
     POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", "60"))
     bg_scheduler = BackgroundScheduler()
-    bg_scheduler.add_job(poll_all_tickers, "interval", seconds=POLL_INTERVAL)
+    bg_scheduler.add_job(poll_and_process, "interval", seconds=POLL_INTERVAL)
     bg_scheduler.start()
-    poll_all_tickers()  # run once immediately
+    poll_and_process()
     st.session_state["scheduler_started"] = True
 
-# Auto-refresh every 30 seconds
 st_autorefresh(interval=30_000, key="datarefresh")
 
 st.title("Real-Time Stock Data Dashboard")
