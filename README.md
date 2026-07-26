@@ -76,6 +76,3 @@ python -m pytest tests/test_calculator.py tests/test_schemas.py -v
 - **Single-container deployment on Render free tier:** ingestion and the dashboard run in one process so they can share the same local SQLite file, since Render's free tier has no shared disk between separate services. This means the background scheduler only runs while the service is receiving traffic — not truly continuous on the free tier.
 - **Ephemeral storage:** the free-tier filesystem resets on redeploy/restart. A production deployment would use a managed database (e.g. Render's paid persistent disk, or PostgreSQL) instead.
 
-## Screenshots
-
-*(add 1-2 screenshots of the dashboard here)*
